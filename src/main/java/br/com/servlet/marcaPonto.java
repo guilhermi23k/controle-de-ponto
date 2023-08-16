@@ -36,10 +36,8 @@ public class marcaPonto extends HttpServlet {
 //		lê o JSON e retorna um objeto empresa
     	
 		try {
-			String rawJson = readRawJson(req, resp);
-			List<String> jsons = separaJson(rawJson);
-			Empresa emp = JsonToEmpresa(jsons.get(0));
-			List<LocalDate> datas = jsonToDates(jsons.get(1));
+			String jsonReq = readRawJson(req, resp);
+			Empresa emp = jsonToEmpresa(jsonReq);
 			ControllerEmpresa controller = new ControllerEmpresa(emp);
 			
 			List<Horario>[] hrs = controller.subtraiMarcacoes();
@@ -54,12 +52,13 @@ public class marcaPonto extends HttpServlet {
 			
 		} catch (IOException e) {
 			e.printStackTrace();
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().write("{Erro nos dados do JSON}");
 		} catch (JSONException e) {
 			e.printStackTrace();
-		}
-        
-
-        
+			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			resp.getWriter().write("{Erro nos dados do JSON}");
+		}    
         
     }
     
@@ -90,32 +89,31 @@ public class marcaPonto extends HttpServlet {
         return sb.toString();
     }
     
-    protected List<String> separaJson(String json) throws JSONException {
-    	List<String> jsons = new ArrayList<>();
+    protected Empresa jsonToEmpresa(String json) throws JSONException {
+    	List<Horario> horarios = new ArrayList<>();
+    	List<Horario> marcacoes = new ArrayList<>();
+    	
     	JSONObject obj = new JSONObject(json);
-    	String jsonData = obj.getString("jsonData").toString();
-    	jsons.add(jsonData);
-    	String date = obj.getString("dateS").toString();
-    	jsons.add(date);
-    	return jsons;
-    }
-    
-    protected Empresa JsonToEmpresa(String json) throws IOException, JSONException {
-    	JSONObject obj = new JSONObject(json);
-    	String jsonData = obj.toString();
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
-                .create();
-        return gson.fromJson(jsonData, Empresa.class);
-    }
-    
-    protected List<LocalDate> jsonToDates(String dates) throws JSONException {
-    	List<LocalDate> datas = new ArrayList<>();
-    	JSONObject obj = new JSONObject(dates);
-    	JSONArray dtHorario = obj.getJSONArray("horario");
-    	JSONArray dtMarcacao = obj.getJSONArray("marcacao");
-    	return datas;
+    	JSONArray horariosJson = obj.getJSONArray("horarios");
+    	JSONArray marcacoesJson = obj.getJSONArray("marcacoes");
+    	
+    	for(int i=0; i<horariosJson.length(); i++) {
+    		JSONObject hor = horariosJson.getJSONObject(i);
+    		LocalTime entrada = LocalTime.parse(hor.getString("entrada"));
+    		LocalTime saida = LocalTime.parse(hor.getString("saida"));
+    		horarios.add(new Horario(entrada, saida));
+    	}
+    	
+    	for(int i=0; i<marcacoesJson.length(); i++) {
+    		JSONObject hor = marcacoesJson.getJSONObject(i);
+    		LocalTime entrada = LocalTime.parse(hor.getString("entrada"));
+    		LocalTime saida = LocalTime.parse(hor.getString("saida"));
+    		marcacoes.add(new Horario(entrada, saida));
+    	}
+    	
+    	return new Empresa(horarios, marcacoes);
     	
     }
+    
     
 }

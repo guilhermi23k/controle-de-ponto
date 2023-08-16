@@ -1,5 +1,6 @@
 package br.com.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -11,125 +12,105 @@ import br.com.model.Jornada;
 
 public class ControllerEmpresa {
 	Empresa emp = new Empresa();
-	List<Jornada> horarios = new ArrayList<>();
-	List<Jornada> marcacoes = new ArrayList<>();
+	List<Horario> horarios = new ArrayList<>();
+	List<Horario> marcacoes = new ArrayList<>();
 	
 	public ControllerEmpresa(Empresa emp) {
-		this.emp.setHorarios(emp.getHorarios());
-		this.emp.setMarcacoes(emp.getMarcacoes());
-		setHorarios();
+		this.horarios = emp.getHorarios();
+		this.marcacoes = emp.getMarcacoes();
 	}
 
 	
-	
-//	List<Jornada> horarios  = converteHorario(emp.getHorarios());
-//	List<Jornada> marcacoes = converteHorario(emp.getMarcacoes());
+
 	public List<Horario>[] subtraiMarcacoes() {
 		List<Horario> atrasos = new ArrayList<>();
 		List<Horario> hExtras = new ArrayList<>();
-        List<Jornada> mAntigas = new ArrayList<>();
-		int flag = 0;
-        
-        for (Jornada horario : horarios) {
-        	for(int i=0; i<marcacoes.size(); i++) {
-        		LocalDateTime entrada = marcacoes.get(i).getEntrada();
-        		LocalDateTime saida = marcacoes.get(i).getSaida();
-        		
-        		if(entrada.isAfter(horario.getEntrada())) {	
-        			atrasos.add(new Horario(horario.getEntrada().toLocalTime(), entrada.toLocalTime()));
-        			hExtras.addAll(verificaHoraExtra(saida, horario.getSaida(), flag, horarios));
-        			
-        			if(saida.isBefore(horario.getSaida())) {
-        				atrasos.add(new Horario(saida.toLocalTime(), horario.getSaida().toLocalTime()));
-        			}
-        		}
-        		
-        		if(entrada.isBefore(horario.getEntrada())) {
-        			hExtras.add(new Horario(entrada.toLocalTime(), horario.getEntrada().toLocalTime()));
-        			
-        			hExtras.addAll(verificaHoraExtra(saida, horario.getSaida(), flag, horarios));
-        			
-        			
-        			if(saida.isBefore(horario.getSaida())) {
-        				atrasos.add(new Horario(saida.toLocalTime(), horario.getSaida().toLocalTime()));
-        			}
-        			
-        		}
-        		
-        		if(entrada.equals(horario.getEntrada())) {
-        			
-        			hExtras.addAll(verificaHoraExtra(saida, horario.getSaida(), flag, horarios));
-        			
-        			if(saida.isBefore(horario.getSaida())) {
-        				atrasos.add(new Horario(saida.toLocalTime(), horario.getSaida().toLocalTime()));
-        			}
-        			
-        		}
-        		mAntigas.add(marcacoes.get(i));
-        		marcacoes.remove(i);
-        		
-        		
-        	}
-        	
-		}
-        LocalDateTime ultimaSaida = mAntigas.get(mAntigas.size()-1).getSaida();
-        LocalDateTime ultimoHorarioEntrada = horarios.get(horarios.size()-1).getEntrada();
-        LocalDateTime ultimoHorarioSaida = horarios.get(horarios.size()-1).getSaida();
-        
-        if(ultimaSaida.isBefore(ultimoHorarioEntrada) || ultimaSaida.equals(ultimoHorarioEntrada) )  	
-        	atrasos.add(new Horario(ultimoHorarioEntrada.toLocalTime(), ultimoHorarioSaida.toLocalTime()));
-        
-//		adiciona as marcações restantes como horas extras
-        marcacoes.forEach(m->hExtras.add(new Horario(m.getEntrada().toLocalTime(), m.getSaida().toLocalTime())));
-        
-        return new List[]{atrasos, hExtras};
-        
-	}
-	
-	protected List<Horario> verificaHoraExtra(LocalDateTime saidaMarcacao, LocalDateTime saidaHorario, int flag, List<Jornada> horarios) {
-		List<Horario> hExtras = new ArrayList<>();
 		
-		if(saidaMarcacao.isAfter(saidaHorario)) {
-			if(flag == horarios.size()-1) {
-				hExtras.add(new Horario(saidaHorario.toLocalTime(), saidaMarcacao.toLocalTime()));
-			}
-			if(flag < horarios.size()-1) {
-//		    adiciona a hora extra equivalente do final do primeiro periodo até o começo da próxima
-				hExtras.add(new Horario(saidaHorario.toLocalTime() , horarios.get(flag+1).getEntrada().toLocalTime()));
+		int length = 1440;
+		int[] timeMap = new int[length];
+		for (int i = 0; i < length; ++i) {
+            timeMap[i] = 0;
+        }
+		
+		for(Horario workTime : horarios) {
+			int start = timeToMinute(workTime.getEntrada());
+			int end = timeToMinute(workTime.getSaida());
+			
+			if(start>end)
+				end += timeMap.length;
+			
+			for(int i=start; i<end; i++) {
+				if(i>=timeMap.length) {
+					timeMap[i-length] = 1;
+				}else {
+					timeMap[i] = 1;
+				}
 				
-				hExtras.addAll(verificaHoraExtra(saidaMarcacao, horarios.get(flag+1).getSaida(), flag+1, horarios));
 			}
-		
 		}
 		
-		return hExtras;
+		for(Horario registro : marcacoes) {
+			int start = timeToMinute(registro.getEntrada());
+			int end = timeToMinute(registro.getSaida());
+			
+			if(start>end)
+				end += timeMap.length;
+			
+			for(int i=start; i<end; i++) {
+				if(i>=timeMap.length) {
+					timeMap[i-length] += 2;
+				}else {
+					timeMap[i] += 2;
+				}
+				
+			}
+		}
 		
+		int start = -1;
+		int previous = 0;
+		int offset = timeToMinute(marcacoes.get(0).getEntrada());
 		
+		for(int j=offset; j<offset+1441; j++) {
+			int i = j;
+			if(i>= timeMap.length)
+				i -= 1440;
+			
+			if(timeMap[i] == previous)
+				continue;
+			
+			if(start == -1) {
+				start = i;
+				previous = timeMap[i];
+				continue;
+			}
+			LocalTime startTime = minuteToTime(start);
+			LocalTime endTime = minuteToTime(i);
+			
+			if(previous == 1)
+				atrasos.add(new Horario(startTime, endTime));
+			
+			if(previous == 2)
+				hExtras.add(new Horario(startTime, endTime));
+			
+			start = -1;
+			previous = 0;
+		}
+		
+		return new List[]{atrasos, hExtras};  
+        
 	}
 	
-	protected List<Jornada> converteHorario(List<Horario> horarios){
-		List<Jornada> jornadas = new ArrayList<>();
-		horarios.forEach(h -> {
-			jornadas.add(new Jornada(h.getEntrada(), h.getSaida()));
-		});
-		return jornadas;
+	protected int timeToMinute(LocalTime timeStamp) {
+		return (timeStamp.getHour() * 60) + timeStamp.getMinute();
+
 	}
 	
-	protected List<Horario> converteJornada(List<Jornada> jornadas){
-		List<Horario> horarios = new ArrayList<>();
-		jornadas.forEach(j -> {
-			horarios.add(new Horario(j.getEntrada().toLocalTime(), j.getSaida().toLocalTime()));
-		});
-		return horarios;
-		
+	protected LocalTime minuteToTime(int minutes) {
+		int hh = minutes/60;
+		int mm = minutes%60;
+		return LocalTime.of(hh, mm);
 	}
 	
-	protected void setHorarios(){
-		if(!emp.getHorarios().isEmpty())
-			horarios.addAll(converteHorario(emp.getHorarios()));
-		
-		if(!emp.getMarcacoes().isEmpty())
-		    marcacoes.addAll(converteHorario(emp.getMarcacoes()));
-	}
+	
 
 }
