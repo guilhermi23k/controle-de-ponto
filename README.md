@@ -1,7 +1,7 @@
 ### Table of Contents
 
-- [Desafio Insight informática](#Desafio-Insight-informática)
-- [Como utilizar](#Como-utilizar)
+- [Desafio Insight informática](#desafio-cnsight-informática)
+- [Como utilizar](#como-utilizar)
 
 # Desafio Insight informática
 
@@ -25,28 +25,28 @@ as tabelas de saída irão exibir as horas extras e os atrasos feitos pelo funci
 
 Exemplo:
 
-###Horário de trabalho
+### Horário de trabalho
 | Entrada | Saida     |           
 | -------- | ------- |
 | `08:00` | `12:00` | 
 | `--:--` | `--:--` | 
 | `--:--` | `--:--` | 
 
-###Marcações
+### Marcações
 | Entrada | Saida     |           
 | -------- | ------- |
 | `07:00` | `11:00` | 
 | `--:--` | `--:--` |  
 | `--:--` | `--:--` | 
 
-###Horas Extras
+### Horas Extras
 | Entrada | Saida     |           
 | -------- | ------- |
 | `07:00` | `8:00` | 
 | `--:--` | `--:--` |  
 | `--:--` | `--:--` | 
 
-###Atrasos
+### Atrasos
 | Entrada | Saida     |           
 | -------- | ------- |
 | `11:00` | `12:00` | 
