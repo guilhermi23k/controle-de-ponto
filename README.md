@@ -14,8 +14,9 @@ http://localhost:8080/ponto/registro
 
 A porta pode variar de acordo com a instalação do TomCat.
 
+Obrigado pela Oportunidade e espero poder fazer parte do time Insight!
 
-# Como utilizar
+# Como utilizar 
 
 A aplicação consiste em quatro tabelas, duas de entrada e duas de saída,
 onde a primeira representa o horário de trabalho definido pela empresa e a segunda
@@ -50,5 +51,5 @@ Exemplo:
 | Entrada | Saida     |           
 | -------- | ------- |
 | `11:00` | `12:00` | 
-| `--:--` | `--:--` |  
+| `--:--` | `--:--` |   
 | `--:--` | `--:--` |

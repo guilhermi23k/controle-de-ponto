@@ -66,9 +66,9 @@ public class ControllerEmpresa {
 			}
 		}
 		
-		int start = -1;
-		int previous = 0;
 		int offset = timeToMinute(marcacoes.get(0).getEntrada());
+		int start = offset;
+		int previous = timeMap[offset];
 		
 		for(int j=offset; j<offset+1441; j++) {
 			int i = j;
@@ -78,22 +78,26 @@ public class ControllerEmpresa {
 			if(timeMap[i] == previous)
 				continue;
 			
-			if(start == -1) {
-				start = i;
-				previous = timeMap[i];
-				continue;
-			}
+//			if(start == -1) {
+//				start = i;
+//				previous = timeMap[i];
+//				continue;
+//			}
+			
 			LocalTime startTime = minuteToTime(start);
 			LocalTime endTime = minuteToTime(i);
-			
-			if(previous == 1)
+			if(previous == 1) 
 				atrasos.add(new Horario(startTime, endTime));
+				
 			
-			if(previous == 2)
+			
+			if(previous == 2) 
 				hExtras.add(new Horario(startTime, endTime));
+				
 			
-			start = -1;
-			previous = 0;
+			
+			start = i;
+			previous = timeMap[i];
 		}
 		
 		return new List[]{atrasos, hExtras};  
